@@ -1,0 +1,35 @@
+name: Sync upstream cloud-mail
+
+permissions:
+  contents: write
+
+on:
+  schedule:
+    - cron: "0 5 * * *" # daily 05:00 UTC - follow upstream maillab/cloud-mail
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.repository.fork }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Take upstream tree and push (triggers deploy on mail-worker/mail-vue changes)
+        run: |
+          git config user.name "cloud-mail-sync-bot"
+          git config user.email "4444023+cloud-mail-sync-bot@users.noreply.github.com"
+          git remote add upstream https://github.com/maillab/cloud-mail.git
+          git fetch upstream main
+          git checkout upstream/main -- .
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No upstream changes to sync"
+          else
+            git commit -m "sync: upstream maillab/cloud-mail $(date -u +%Y-%m-%d)"
+          fi
+          git push origin main
