@@ -2,6 +2,7 @@ name: Sync upstream cloud-mail
 
 permissions:
   contents: write
+  actions: write
 
 on:
   schedule:
@@ -19,8 +20,11 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Take upstream tree and push (triggers deploy on mail-worker/mail-vue changes)
+      - name: Take upstream tree, push, and trigger deploy when worker/vue changes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          BEFORE=$(git rev-parse HEAD)
           git config user.name "cloud-mail-sync-bot"
           git config user.email "4444023+cloud-mail-sync-bot@users.noreply.github.com"
           git remote add upstream https://github.com/maillab/cloud-mail.git
@@ -32,5 +36,8 @@ jobs:
             echo "No upstream changes to sync"
           else
             git commit -m "sync: upstream maillab/cloud-mail $(date -u +%Y-%m-%d)"
+            git push origin main
+            if ! git diff --quiet "$BEFORE" HEAD -- mail-worker/ mail-vue/; then
+              gh workflow run deploy-cloudflare.yml --repo "${{ github.repository }}" --ref main
+            fi
           fi
-          git push origin main
