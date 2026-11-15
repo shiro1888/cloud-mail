@@ -27,7 +27,7 @@ jobs:
         run: pnpm --prefix ../mail-vue install && pnpm --prefix ../mail-vue run build
         working-directory: ./mail-worker
       - name: Deploy Worker
-        run: pnpm wrangler deploy -c wrangler-build.toml
+        run: pnpm wrangler deploy
         working-directory: ./mail-worker
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
