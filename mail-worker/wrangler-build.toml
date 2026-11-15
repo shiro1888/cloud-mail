@@ -1,0 +1,46 @@
+# prod-mail-core production config for Workers Builds / manual deploy (2026-11-15)
+# Derived from maillab/cloud-mail wrangler-action.toml template.
+# keep_vars = true preserves ALL existing dashboard vars/secrets
+# (admin, jwt_secret, domain, ai_model, analysis_cache, project_link) - nothing sensitive lives here.
+name = "prod-mail-core"
+main = "src/index.js"
+compatibility_date = "2025-06-04"
+keep_vars = true
+
+[observability]
+enabled = true
+
+[[routes]]
+pattern = "mail.shiro1888.com"
+custom_domain = true
+
+[[d1_databases]]
+binding = "db"
+database_name = "prod-cloudmail-db"
+database_id = "21dec9fa-ed20-4bbc-839f-406f80d474c2"
+
+[[kv_namespaces]]
+binding = "kv"
+id = "6c86d1b65f7c4857add2f9fe05ff06c7"
+
+[[r2_buckets]]
+binding = "r2"
+bucket_name = "prod-cloudmail-r2"
+
+[[send_email]]
+name = "forward"
+
+[[send_email]]
+name = "email"
+
+[ai]
+binding = "ai"
+
+[assets]
+binding = "assets"
+directory = "./dist"
+not_found_handling = "single-page-application"
+run_worker_first = true
+
+[triggers]
+crons = ["0 * * * *"]
