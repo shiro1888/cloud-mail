@@ -1,0 +1,33 @@
+name: Deploy prod-mail-core to Cloudflare Workers
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "mail-worker/**"
+      - "mail-vue/**"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install worker dependencies
+        run: pnpm install --frozen-lockfile
+        working-directory: ./mail-worker
+      - name: Build frontend
+        run: pnpm --prefix ../mail-vue install && pnpm --prefix ../mail-vue run build
+        working-directory: ./mail-worker
+      - name: Deploy Worker
+        run: pnpm wrangler deploy
+        working-directory: ./mail-worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
